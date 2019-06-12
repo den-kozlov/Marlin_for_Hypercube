@@ -505,9 +505,9 @@
   //#define DEFAULT_Ki 2.25
   //#define DEFAULT_Kd 440
 
-#define  DEFAULT_Kp 23.63
-#define  DEFAULT_Ki 1.63
-#define  DEFAULT_Kd 85.66
+#define DEFAULT_Kp 15.59
+#define DEFAULT_Ki 0.87
+#define DEFAULT_Kd 69.91
 #endif // PIDTEMP
 
 //===========================================================================
@@ -905,7 +905,7 @@
  * Z Servo Probe, such as an endstop switch on a rotating arm.
  */
 //#define Z_PROBE_SERVO_NR 0       // Defaults to SERVO 0 connector.
-//#define Z_SERVO_ANGLES { 90, 15 } // Z Servo Deploy and Stow angles
+//#define Z_SERVO_ANGLES { 60, 15 } // Z Servo Deploy and Stow angles
 
 /**
  * The BLTouch probe uses a Hall effect sensor and emulates a servo.
@@ -1055,7 +1055,7 @@
 // Before deploy/stow pause for user confirmation
 //#define PAUSE_BEFORE_DEPLOY_STOW
 #if ENABLED(PAUSE_BEFORE_DEPLOY_STOW)
-  //#define PAUSE_PROBE_DEPLOY_WHEN_TRIGGERED // For Manual Deploy Allenkey Probe
+  #define PAUSE_PROBE_DEPLOY_WHEN_TRIGGERED // For Manual Deploy Allenkey Probe
 #endif
 
 /**
@@ -2279,7 +2279,7 @@
 // @section extras
 
 // Increase the FAN PWM frequency. Removes the PWM noise but increases heating in the FET/Arduino
-#define FAST_PWM_FAN
+//#define FAST_PWM_FAN
 
 // Use software PWM to drive the fan, as for the heaters. This uses a very low frequency
 // which is not as annoying as with the hardware PWM. On the other hand, if this frequency
@@ -2404,7 +2404,7 @@
 #define SERVO_DELAY { 300 }
 
 // Only power servos during movement, otherwise leave off to prevent jitter
-#define DEACTIVATE_SERVOS_AFTER_MOVE
+//#define DEACTIVATE_SERVOS_AFTER_MOVE
 
 // Allow servo angle to be edited and saved to EEPROM
 #define EDITABLE_SERVO_ANGLES
