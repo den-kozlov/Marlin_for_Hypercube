@@ -25,11 +25,11 @@
 #include "unwinder.h"
 #include "unwmemaccess.h"
 
-#include "../HAL_MinSerial.h"
+#include "../MinSerial.h"
 #include <stdarg.h>
 
 // Dump a backtrace entry
-static bool UnwReportOut(void* ctx, const UnwReport* bte) {
+static bool UnwReportOut(void *ctx, const UnwReport *bte) {
   int *p = (int*)ctx;
 
   (*p)++;
