@@ -139,14 +139,15 @@ constexpr ena_mask_t enable_overlap[] = {
   #ifdef SHAPING_MAX_STEPRATE
     constexpr float max_step_rate = SHAPING_MAX_STEPRATE;
   #else
+    #define ISALIM(I, ARR) _MIN(I, COUNT(ARR) - 1)
     constexpr float     _ISDASU[] = DEFAULT_AXIS_STEPS_PER_UNIT;
     constexpr feedRate_t _ISDMF[] = DEFAULT_MAX_FEEDRATE;
     constexpr float max_shaped_rate = TERN0(INPUT_SHAPING_X, _ISDMF[X_AXIS] * _ISDASU[X_AXIS]) +
                                       TERN0(INPUT_SHAPING_Y, _ISDMF[Y_AXIS] * _ISDASU[Y_AXIS]);
     #if defined(__AVR__) || !defined(ADAPTIVE_STEP_SMOOTHING)
       // MIN_STEP_ISR_FREQUENCY is known at compile time on AVRs and any reduction in SRAM is welcome
-      template<int INDEX=DISTINCT_AXES> constexpr float max_isr_rate() {
-        return _MAX(_ISDMF[INDEX - 1] * _ISDASU[INDEX - 1], max_isr_rate<INDEX - 1>());
+      template<unsigned int INDEX=DISTINCT_AXES> constexpr float max_isr_rate() {
+        return _MAX(_ISDMF[ISALIM(INDEX - 1, _ISDMF)] * _ISDASU[ISALIM(INDEX - 1, _ISDASU)], max_isr_rate<INDEX - 1>());
       }
       template<> constexpr float max_isr_rate<0>() {
         return TERN0(ADAPTIVE_STEP_SMOOTHING, MIN_STEP_ISR_FREQUENCY);
@@ -158,10 +159,10 @@ constexpr ena_mask_t enable_overlap[] = {
   #endif
 
   #ifndef SHAPING_MIN_FREQ
-    #define SHAPING_MIN_FREQ _MIN(0x7FFFFFFFL OPTARG(INPUT_SHAPING_X, SHAPING_FREQ_X) OPTARG(INPUT_SHAPING_Y, SHAPING_FREQ_Y))
+    #define SHAPING_MIN_FREQ _MIN(__FLT_MAX__ OPTARG(INPUT_SHAPING_X, SHAPING_FREQ_X) OPTARG(INPUT_SHAPING_Y, SHAPING_FREQ_Y))
   #endif
-  constexpr uint16_t shaping_min_freq = SHAPING_MIN_FREQ,
-                     shaping_echoes = max_step_rate / shaping_min_freq / 2 + 3;
+  constexpr float shaping_min_freq = SHAPING_MIN_FREQ;
+  constexpr uint16_t shaping_echoes = FLOOR(max_step_rate / shaping_min_freq / 2) + 3;
 
   typedef hal_timer_t shaping_time_t;
   enum shaping_echo_t { ECHO_NONE = 0, ECHO_FWD = 1, ECHO_BWD = 2 };
@@ -335,6 +336,12 @@ class Stepper {
       static ne_coeff_t ne;
     #endif
 
+    #if ENABLED(ADAPTIVE_STEP_SMOOTHING_TOGGLE)
+      static bool adaptive_step_smoothing_enabled;
+    #else
+      static constexpr bool adaptive_step_smoothing_enabled = true;
+    #endif
+
   private:
 
     static block_t* current_block;        // A pointer to the block currently being traced
@@ -376,7 +383,7 @@ class Stepper {
     #if ENABLED(ADAPTIVE_STEP_SMOOTHING)
       static uint8_t oversampling_factor; // Oversampling factor (log2(multiplier)) to increase temporal resolution of axis
     #else
-      static constexpr uint8_t oversampling_factor = 0;
+      static constexpr uint8_t oversampling_factor = 0; // Without smoothing apply no shift
     #endif
 
     // Delta error variables for the Bresenham line tracer
@@ -654,7 +661,9 @@ class Stepper {
 
     #if ENABLED(FT_MOTION)
       // Manage the planner
-      static void ftMotion_BlockQueueUpdate();
+      static void ftMotion_blockQueueUpdate();
+      // Set current position in steps when reset flag is set in M493 and planner already synchronized
+      static void ftMotion_syncPosition();
     #endif
 
     #if HAS_ZV_SHAPING
@@ -693,8 +702,7 @@ class Stepper {
     #endif
 
     #if ENABLED(FT_MOTION)
-      static void ftMotion_stepper(const bool applyDir, const ft_command_t command);
-      static void ftMotion_refreshAxisDidMove();
+      static void ftMotion_stepper();
     #endif
 
 };
