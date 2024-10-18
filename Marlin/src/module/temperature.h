@@ -351,7 +351,7 @@ typedef struct { float p, i, d, c, f; } raw_pidcf_t;
       void reset() { cPID::reset(); }
 
       float get_fan_scale_output(const uint8_t fan_speed) {
-        work_f = fan_speed > (SCALE_MIN_SPEED) ? Kf + (SCALE_LIN_FACTOR) * fan_speed : 0;
+        work_f = fan_speed > (SCALE_MIN_SPEED) ? Kf + (SCALE_LIN_FACTOR/255.0) * fan_speed : 0;
         return work_f;
       }
       float get_extrusion_scale_output(const bool is_active, const int32_t e_position, const float e_mm_per_step, const int16_t lpq_len) {
